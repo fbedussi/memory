@@ -3,11 +3,16 @@
     padding: 0;
 }
 
+body {
+    display: flex;
+}
+
 .cardsDeck {
     list-style: none;
     display: flex;
     flex-wrap: wrap;
     perspective: 1000px;
+    width: 80%
 }
 
 .card {
@@ -44,4 +49,8 @@
 
 .cardBack {
     z-index: 2;
+}
+
+.scoreCard {
+    width: 20%;
 }

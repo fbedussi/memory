@@ -44,7 +44,7 @@ function initState() {
         points: 0,
         flippedCards: [],
         guessedCards: [],
-        turningCards: false,
+        turns: 0,
         cards: initCards()
     };
 }
@@ -54,21 +54,58 @@ function toggleCard(id) {
     return { type: 'TOGGLE_CARD', id: id };
 }
 
+function flipCard(id) {
+    return { type: 'FLIP_CARD', id: id };
+}
+
+function unflipCards() {
+    return { type: 'UNFLIP_CARDS'};
+}
+
+function checkMatch() {
+    return { type: 'CHECK_MATCH'};
+}
+
+function newTurn() {
+    return { type: 'NEW_TURN'};
+}
+
+
 //Reducer
 function reducer(state, action) {
     switch (action.type) {
-        case 'TOGGLE_CARD':
-            const flippedCards = !state.flippedCards.includes(action.id) ?
-                state.flippedCards.length === 1 ? state.flippedCards.concat(action.id) : [action.id]
-                : state.flippedCards;
-            
-            
-            var cardsMatch = flippedCards.length === 2 && flippedCards.reduce(function(a,b) {return state.cards.filter(card => card.id === a)[0].name === state.cards.filter(card => card.id === b)[0].name;});
+        //case 'TOGGLE_CARD':
+        //    const flippedCards = !state.flippedCards.includes(action.id) ?
+        //        state.flippedCards.length === 1 ? state.flippedCards.concat(action.id) : [action.id]
+        //        : state.flippedCards;
+        //    
+        //    
+        //    var cardsMatch = flippedCards.length === 2 && flippedCards.reduce(function(a,b) {return state.cards.filter(card => card.id === a)[0].name === state.cards.filter(card => card.id === b)[0].name;});
+        //    const guessedCards =  cardsMatch ? state.guessedCards.concat(flippedCards) : state.guessedCards;
+        //    
+        //    return Object.assign({}, state, {
+        //        flippedCards,
+        //        guessedCards
+        //    });
+        case 'CHECK_MATCH':
+            var cardsMatch = state.flippedCards.length === 2 && state.flippedCards.reduce(
+                                             function(a,b) {
+                                                return state.cards.filter(card => card.id === a)[0].name === state.cards.filter(card => card.id === b)[0].name;});
             const guessedCards =  cardsMatch ? state.guessedCards.concat(flippedCards) : state.guessedCards;
-            
             return Object.assign({}, state, {
-                flippedCards,
                 guessedCards
+            });
+        case 'FLIP_CARD':
+            return Object.assign({}, state, {
+                flippedCards: state.flippedCards.includes(action.id) ? state.flippedCards: state.flippedCards.concat(action.id)
+            });
+        case 'UNFLIP_CARDS':
+            return Object.assign({}, state, {
+                flippedCards: [],
+            });
+        case 'NEW_TURN':
+            return Object.assign({}, state, {
+                turns: state.turns + 1,
             });
         default:
             return state;
@@ -82,6 +119,7 @@ const store = createStore(reducer, initState());
 
 //Front end
 const pointsEl = document.getElementById('points');
+const turnsEl = document.getElementById('turns');
 
 store.subscribe(function() {
     const state = store.getState();
@@ -101,15 +139,27 @@ store.subscribe(function() {
        }
     });
     
-    pointsEl.innerHTML = state.guessedCards.length;
+    pointsEl.innerHTML = state.guessedCards.length / 2;
+    turnsEl.innerHTML = state.turns;
 });
 
-function dispatchToggleCard(id) {
+function handleCardClic(id) {
     return function() {
-        store.dispatch(toggleCard(id));
+        const state = store.getState();
+        if (state.flippedCards.includes(id)) {
+            return;
+        }
+        
+        if (state.flippedCards.length === 2) {
+            store.dispatch(unflipCards());
+            store.dispatch(newTurn());
+        }
+        
+        store.dispatch(flipCard(id));
+        store.dispatch(checkMatch());
     };
 }
 
 store.getState().cards.forEach(function(card) {
-    card.el.addEventListener('click', dispatchToggleCard(card.id));
+    card.el.addEventListener('click', handleCardClic(card.id));
 });
