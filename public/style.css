@@ -1,0 +1,47 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.cardsDeck {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    perspective: 1000px;
+}
+
+.card {
+    width: 10em;
+    height: 10em;
+    transition: 0.6s;
+	transform-style: preserve-3d;
+	position: relative;
+}
+
+.card.flipped, .card.guessed {
+    transform: rotateY(180deg);
+}
+
+.cardFront, .cardBack {
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+	position: absolute;
+	top: 0;
+	left: 0;
+    text-align: center;
+}
+
+.card img {
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+}
+
+.cardFront {
+    transform: rotateY(180deg);
+}
+
+.cardBack {
+    z-index: 2;
+}
