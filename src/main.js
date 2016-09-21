@@ -70,6 +70,10 @@ function newTurn() {
     return { type: 'NEW_TURN'};
 }
 
+function reset() {
+    return { type: 'RESET'};    
+}
+
 
 //Reducer
 function reducer(state, action) {
@@ -91,7 +95,7 @@ function reducer(state, action) {
             var cardsMatch = state.flippedCards.length === 2 && state.flippedCards.reduce(
                                              function(a,b) {
                                                 return state.cards.filter(card => card.id === a)[0].name === state.cards.filter(card => card.id === b)[0].name;});
-            const guessedCards =  cardsMatch ? state.guessedCards.concat(flippedCards) : state.guessedCards;
+            const guessedCards =  cardsMatch ? state.guessedCards.concat(state.flippedCards) : state.guessedCards;
             return Object.assign({}, state, {
                 guessedCards
             });
@@ -107,6 +111,13 @@ function reducer(state, action) {
             return Object.assign({}, state, {
                 turns: state.turns + 1,
             });
+        case 'RESET':
+            return Object.assign({}, state, {
+                turns: 0,
+                points: 0,
+                flippedCards: [],
+                guessedCards: []
+            });
         default:
             return state;
     }
@@ -120,6 +131,7 @@ const store = createStore(reducer, initState());
 //Front end
 const pointsEl = document.getElementById('points');
 const turnsEl = document.getElementById('turns');
+const resetEl = document.getElementById('reset');
 
 store.subscribe(function() {
     const state = store.getState();
@@ -162,4 +174,7 @@ function handleCardClic(id) {
 
 store.getState().cards.forEach(function(card) {
     card.el.addEventListener('click', handleCardClic(card.id));
+});
+resetEl.addEventListener('click', function() {
+   store.dispatch(reset()); 
 });
