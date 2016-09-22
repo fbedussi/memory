@@ -1,7 +1,6 @@
 import {createStore, applyMiddleware} from 'redux';
 
 function addCardToDom(frontImageName, backImageName) {
-    var rootElement = document.getElementById('cards');
     var imagesFolder = 'images';
     var card = document.createElement('li');
     var frontContainer = document.createElement('div');
@@ -124,36 +123,13 @@ function reducer(state, action) {
 }
 
 
-//Store
-const store = createStore(reducer, initState());
-
-
 //Front end
+var store;
 const pointsEl = document.getElementById('points');
 const turnsEl = document.getElementById('turns');
 const resetEl = document.getElementById('reset');
-
-store.subscribe(function() {
-    const state = store.getState();
-    console.log(state);
-    
-    state.cards.forEach(card => {
-       if (state.flippedCards.includes(card.id)) {
-            card.el.classList.add('flipped');
-       } else  {
-            card.el.classList.remove('flipped');
-       }
-       
-       if (state.guessedCards.includes(card.id)) {
-            card.el.classList.add('guessed');
-       } else  {
-            card.el.classList.remove('guessed');
-       }
-    });
-    
-    pointsEl.innerHTML = state.guessedCards.length / 2;
-    turnsEl.innerHTML = state.turns;
-});
+const newGameEl = document.getElementById('newGame');
+const rootElement = document.getElementById('cards');
 
 function handleCardClic(id) {
     return function() {
@@ -172,9 +148,47 @@ function handleCardClic(id) {
     };
 }
 
-store.getState().cards.forEach(function(card) {
-    card.el.addEventListener('click', handleCardClic(card.id));
+function init() {
+    //Store
+    store = createStore(reducer, initState());
+    
+    store.subscribe(function() {
+        const state = store.getState();
+        console.log(state);
+        
+        state.cards.forEach(card => {
+           if (state.flippedCards.includes(card.id)) {
+                card.el.classList.add('flipped');
+           } else  {
+                card.el.classList.remove('flipped');
+           }
+           
+           if (state.guessedCards.includes(card.id)) {
+                card.el.classList.add('guessed');
+           } else  {
+                card.el.classList.remove('guessed');
+           }
+        });
+    
+    pointsEl.innerHTML = state.guessedCards.length / 2;
+    turnsEl.innerHTML = state.turns;
 });
+    
+    store.getState().cards.forEach(function(card) {
+        card.el.addEventListener('click', handleCardClic(card.id));
+    });    
+}
+
 resetEl.addEventListener('click', function() {
    store.dispatch(reset()); 
 });
+
+newGameEl.addEventListener('click', function() {
+    store.dispatch(reset());
+    setTimeout(function() {
+        rootElement.innerHTML = '';
+        init();        
+    }, 500);
+});
+
+init();
