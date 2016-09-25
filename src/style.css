@@ -1,41 +1,28 @@
 * {
     margin: 0;
     padding: 0;
-    -webkit-user-select: none;
-       -moz-user-select: none;
-        -ms-user-select: none;
-            user-select: none;
+    user-select: none;
 }
 
 body {
-    display: -webkit-box;
-    display: -ms-flexbox;
     display: flex;
     min-height: 100vh;
 }
 
 .cardsDeck {
     list-style: none;
-    display: -webkit-box;
-    display: -ms-flexbox;
     display: flex;
-    -ms-flex-wrap: wrap;
-        flex-wrap: wrap;
-    -webkit-box-pack: center;
-        -ms-flex-pack: center;
-            justify-content: center;
-    -webkit-perspective: 1000px;
-            perspective: 1000px;
+    flex-wrap: wrap;
+    justify-content: center;
+    perspective: 1000px;
     width: calc(100% - 15em);
 }
 
 .card {
     width: 14vMin;
     height:14vMin;
-    -webkit-transition: 0.6s;
     transition: 0.6s;
-	-webkit-transform-style: preserve-3d;
-	        transform-style: preserve-3d;
+	transform-style: preserve-3d;
 	position: relative;
     border: solid 1px black;
     border-radius: 3px;
@@ -43,8 +30,7 @@ body {
 }
 
 .card.flipped, .card.guessed {
-    -webkit-transform: rotateY(180deg);
-            transform: rotateY(180deg);
+    transform: rotateY(180deg);
 }
 
 .card.guessed {
@@ -56,8 +42,7 @@ body {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
-    -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
+    backface-visibility: hidden;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -71,8 +56,7 @@ body {
 }
 
 .cardFront {
-    -webkit-transform: rotateY(180deg);
-            transform: rotateY(180deg);
+    transform: rotateY(180deg);
 }
 
 .cardBack {
@@ -86,22 +70,13 @@ body {
     padding: 1em;
     box-sizing: border-box;
     font-family: arial, sans-serif;
-    display: -webkit-box;
-    display: -ms-flexbox;
     display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-        -ms-flex-direction: column;
-            flex-direction: column;
-    -webkit-box-pack: justify;
-        -ms-flex-pack: justify;
-            justify-content: space-between;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .scoreCard .wrapper {
-    -webkit-box-flex: 1;
-        -ms-flex: 1;
-            flex: 1;
+    flex: 1;
 }
 
 .scoreCard .wrapper > div {
@@ -123,10 +98,7 @@ body {
 
 @media screen and (max-width: 80em) {
     body {
-        -webkit-box-orient: vertical;
-        -webkit-box-direction: normal;
-            -ms-flex-direction: column;
-                flex-direction: column;
+        flex-direction: column;
     }
     
     .cardsDeck, .scoreCard {
