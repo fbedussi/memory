@@ -27,24 +27,33 @@ function shuffle(array) {
     return array;
 }
 
-function initCards() {
+function initCardTiles(animalsNumber) {
     var backImage = 'back.svg';
     var animals = ['cat', 'donkey', 'teal', 'duck', 'monkey', 'dog', 'cow', 'chick', 'elephant', 'beaver', 'penguin', 'zebra', 'pig', 'lion', 'hen', 'bear' ];
+    animals = animals.slice(0, animalsNumber);
     
-    return shuffle(animals.concat(animals)).map((animal, i) => ({
-        id: i,
-        name: animal,
-        el: addCardToDom(animal + '.svg', backImage)
-    }));
+    rootElement.innerHTML = '';
+    
+    return shuffle(animals.concat(animals)).map((animal, i) => {
+        var card = addCardToDom(animal + '.svg', backImage);
+        card.addEventListener('click', handleCardClic(i));
+        
+        return {
+            id: i,
+            name: animal,
+            el: card
+        };
+    });
 }
 
 function initState() {
     return {
+        animals: 10,
         points: 0,
         flippedCards: [],
         guessedCards: [],
         turns: 0,
-        cards: initCards()
+        cards: []
     };
 }
 
@@ -73,23 +82,14 @@ function reset() {
     return { type: 'RESET'};    
 }
 
+function initCards(animals) {
+    return { type: 'INIT_CARDS', animals: animals};    
+}
+
 
 //Reducer
 function reducer(state, action) {
     switch (action.type) {
-        //case 'TOGGLE_CARD':
-        //    const flippedCards = !state.flippedCards.includes(action.id) ?
-        //        state.flippedCards.length === 1 ? state.flippedCards.concat(action.id) : [action.id]
-        //        : state.flippedCards;
-        //    
-        //    
-        //    var cardsMatch = flippedCards.length === 2 && flippedCards.reduce(function(a,b) {return state.cards.filter(card => card.id === a)[0].name === state.cards.filter(card => card.id === b)[0].name;});
-        //    const guessedCards =  cardsMatch ? state.guessedCards.concat(flippedCards) : state.guessedCards;
-        //    
-        //    return Object.assign({}, state, {
-        //        flippedCards,
-        //        guessedCards
-        //    });
         case 'CHECK_MATCH':
             var cardsMatch = state.flippedCards.length === 2 && state.flippedCards.reduce(
                                              function(a,b) {
@@ -117,6 +117,11 @@ function reducer(state, action) {
                 flippedCards: [],
                 guessedCards: []
             });
+        case 'INIT_CARDS':
+            return Object.assign({}, state, {
+                animals: action.animals,
+                cards: initCardTiles(action.animals) 
+            });
         default:
             return state;
     }
@@ -129,6 +134,7 @@ const pointsEl = document.getElementById('points');
 const turnsEl = document.getElementById('turns');
 const resetEl = document.getElementById('reset');
 const newGameEl = document.getElementById('newGame');
+const animalsEl = document.getElementById('animals');
 const rootElement = document.getElementById('cards');
 
 function handleCardClic(id) {
@@ -148,47 +154,51 @@ function handleCardClic(id) {
     };
 }
 
-function init() {
-    //Store
-    store = createStore(reducer, initState());
+
+//Store
+store = createStore(reducer, initState());
     
-    store.subscribe(function() {
-        const state = store.getState();
-        console.log(state);
-        
-        state.cards.forEach(card => {
-           if (state.flippedCards.includes(card.id)) {
-                card.el.classList.add('flipped');
-           } else  {
-                card.el.classList.remove('flipped');
-           }
-           
-           if (state.guessedCards.includes(card.id)) {
-                card.el.classList.add('guessed');
-           } else  {
-                card.el.classList.remove('guessed');
-           }
-        });
+store.subscribe(function() {
+    const state = store.getState();
     
+    console.log(state);
+    
+    state.cards.forEach(card => {
+       if (state.flippedCards.includes(card.id)) {
+            card.el.classList.add('flipped');
+       } else  {
+            card.el.classList.remove('flipped');
+       }
+       
+       if (state.guessedCards.includes(card.id)) {
+            card.el.classList.add('guessed');
+       } else  {
+            card.el.classList.remove('guessed');
+       }
+    });
+
     pointsEl.innerHTML = state.guessedCards.length / 2;
     turnsEl.innerHTML = state.turns;
 });
-    
-    store.getState().cards.forEach(function(card) {
-        card.el.addEventListener('click', handleCardClic(card.id));
-    });    
-}
 
 resetEl.addEventListener('click', function() {
    store.dispatch(reset()); 
 });
 
-newGameEl.addEventListener('click', function() {
+function newGame() {
     store.dispatch(reset());
     setTimeout(function() {
-        rootElement.innerHTML = '';
-        init();        
+        store.dispatch(initCards(animalsEl.value));
     }, 500);
+}
+
+newGameEl.addEventListener('click', newGame);
+
+animalsEl.value = store.getState().animals;
+
+animalsEl.addEventListener('change', function(e) {
+    store.dispatch(reset()); 
+    store.dispatch(initCards(e.target.value));
 });
 
-init();
+store.dispatch(initCards(animalsEl.value));

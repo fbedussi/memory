@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch:js": "watchify src/main.js -o public/bundle.js -t [ babelify  --presets [ es2015 ] --sourceMaps 'both' ]",
     "watch:css": "./node_modules/postcss-cli/bin/postcss -w --use autoprefixer src/*.css -d public/",
+    "watch:css_win": "postcss -w --use autoprefixer src/*.css -d public/",
     "watch": "npm run watch:js & npm run watch:css"
   },
   "keywords": [],
