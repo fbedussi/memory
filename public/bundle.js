@@ -995,61 +995,21 @@ process.umask = function() { return 0; };
 
 var _redux = require('redux');
 
-function addCardToDom(frontImageName, backImageName) {
-    var imagesFolder = 'images';
-    var card = document.createElement('li');
-    var frontContainer = document.createElement('div');
-    var frontImage = document.createElement('img');
-    var backImage = document.createElement('img');
-    var backContainer = document.createElement('div');
-
-    card.className = 'card';
-    frontImage.src = imagesFolder + '/' + frontImageName;
-    frontContainer.className = 'cardFront';
-    frontContainer.appendChild(frontImage);
-    backImage.src = imagesFolder + '/' + backImageName;
-    backContainer.className = 'cardBack';
-    backContainer.appendChild(backImage);
-    card.appendChild(frontContainer);
-    card.appendChild(backContainer);
-    rootElement.appendChild(card);
-
-    return card;
-}
-
 function shuffle(array) {
     for (var j, x, i = array.length; i; j = parseInt(Math.random() * i), x = array[--i], array[i] = array[j], array[j] = x) {}
     return array;
 }
 
-function initCardTiles(animalsNumber) {
-    var backImage = 'back.svg';
+function createNewCards(animalsNumber) {
     var animals = ['cat', 'donkey', 'teal', 'duck', 'monkey', 'dog', 'cow', 'chick', 'elephant', 'beaver', 'penguin', 'zebra', 'pig', 'lion', 'hen', 'bear'];
     animals = animals.slice(0, animalsNumber);
 
-    rootElement.innerHTML = '';
-
     return shuffle(animals.concat(animals)).map(function (animal, i) {
-        var card = addCardToDom(animal + '.svg', backImage);
-        card.addEventListener('click', handleCardClic(i));
-
         return {
             id: i,
-            name: animal,
-            el: card
+            name: animal
         };
     });
-}
-
-function initState() {
-    return {
-        animals: 10,
-        points: 0,
-        flippedCards: [],
-        guessedCards: [],
-        turns: 0,
-        cards: []
-    };
 }
 
 //Actions
@@ -1118,7 +1078,7 @@ function reducer(state, action) {
         case 'INIT_CARDS':
             return Object.assign({}, state, {
                 animals: action.animals,
-                cards: initCardTiles(action.animals)
+                cards: createNewCards(action.animals)
             });
         default:
             return state;
@@ -1126,77 +1086,212 @@ function reducer(state, action) {
 }
 
 //Front end
-var store;
-var pointsEl = document.getElementById('points');
-var turnsEl = document.getElementById('turns');
-var resetEl = document.getElementById('reset');
-var newGameEl = document.getElementById('newGame');
-var animalsEl = document.getElementById('animals');
-var rootElement = document.getElementById('cards');
+var storeManager = {
+    _states: [],
+    _maxStatesLength: 2,
+    _store: {},
 
-function handleCardClic(id) {
-    return function () {
-        var state = store.getState();
-        if (state.flippedCards.includes(id)) {
-            return;
+    _initState: function _initState() {
+        return {
+            animals: 10,
+            points: 0,
+            flippedCards: [],
+            guessedCards: [],
+            turns: 0,
+            cards: []
+        };
+    },
+
+    _storeState: function _storeState(state) {
+        this._states.push(state);
+        if (this._states.length > this._maxStatesLength) {
+            this._states.shift();
+        }
+        return state;
+    },
+
+    getNewState: function getNewState() {
+        return this._storeState(this._store.getState());
+    },
+
+    getPreviousState: function getPreviousState() {
+        return this._states.length < 2 ? null : this._states[this._states.length - 2];
+    },
+
+    getCurrentState: function getCurrentState() {
+        return this._states[this._states.length - 1];
+    },
+
+    getStore: function getStore() {
+        return this._store;
+    },
+
+    init: function init() {
+        var initialState = this._initState();
+        this._store = (0, _redux.createStore)(reducer, initialState);
+        this._states.push(initialState);
+        return this;
+    }
+};
+
+var ui = {
+    _pointsEl: document.getElementById('points'),
+    _turnsEl: document.getElementById('turns'),
+    _resetEl: document.getElementById('reset'),
+    _newGameEl: document.getElementById('newGame'),
+    _animalsEl: document.getElementById('animals'),
+    _rootElement: document.getElementById('cards'),
+    _cardsUI: [],
+    _backImage: 'back.svg',
+    _flippedClass: 'flipped',
+    _guessedClass: 'guessed',
+
+    _handleCardClick: function _handleCardClick(id) {
+        return function () {
+            var state = storeManager.getCurrentState();
+            if (state.flippedCards.includes(id)) {
+                return;
+            }
+
+            if (state.flippedCards.length === 2) {
+                storeManager.getStore().dispatch(unflipCards());
+                storeManager.getStore().dispatch(newTurn());
+            }
+
+            storeManager.getStore().dispatch(flipCard(id));
+            storeManager.getStore().dispatch(checkMatch());
+        };
+    },
+
+    _createNewCardElement: function _createNewCardElement(frontImageName, backImageName) {
+        var imagesFolder = 'images';
+        var card = document.createElement('li');
+        var frontContainer = document.createElement('div');
+        var frontImage = document.createElement('img');
+        var backImage = document.createElement('img');
+        var backContainer = document.createElement('div');
+
+        card.className = 'card';
+        frontImage.src = imagesFolder + '/' + frontImageName;
+        frontContainer.className = 'cardFront';
+        frontContainer.appendChild(frontImage);
+        backImage.src = imagesFolder + '/' + backImageName;
+        backContainer.className = 'cardBack';
+        backContainer.appendChild(backImage);
+        card.appendChild(frontContainer);
+        card.appendChild(backContainer);
+
+        return card;
+    },
+
+    _addNewCardToDOM: function _addNewCardToDOM(cardUI) {
+        cardUI.el.addEventListener('click', this._handleCardClick(cardUI.id).bind(this));
+        this._rootElement.appendChild(cardUI.el);
+    },
+
+    _addListeners: function _addListeners() {
+        function newGame() {
+            var _this = this;
+
+            storeManager.getStore().dispatch(reset());
+            setTimeout(function () {
+                return storeManager.getStore().dispatch(initCards(_this._animalsEl.value));
+            }, 500);
         }
 
-        if (state.flippedCards.length === 2) {
-            store.dispatch(unflipCards());
-            store.dispatch(newTurn());
-        }
+        this._resetEl.addEventListener('click', function () {
+            storeManager.getStore().dispatch(reset());
+        });
 
-        store.dispatch(flipCard(id));
-        store.dispatch(checkMatch());
-    };
-}
+        this._newGameEl.addEventListener('click', newGame.bind(this));
+
+        this._animalsEl.value = storeManager.getCurrentState().animals;
+
+        this._animalsEl.addEventListener('change', function (e) {
+            storeManager.getStore().dispatch(reset());
+            storeManager.getStore().dispatch(initCards(e.target.value));
+        });
+    },
+
+    updateScoreCard: function updateScoreCard(state) {
+        this._pointsEl.innerHTML = state.guessedCards.length / 2;
+        this._turnsEl.innerHTML = state.turns;
+    },
+
+    flipCard: function flipCard(id) {
+        this._cardsUI.filter(function (cardUI) {
+            return cardUI.id === id;
+        })[0].el.classList.add(this._flippedClass);
+    },
+
+    unFlipCard: function unFlipCard(id) {
+        this._cardsUI.filter(function (cardUI) {
+            return cardUI.id === id;
+        })[0].el.classList.remove(this._flippedClass);
+    },
+
+    markGuessed: function markGuessed(id) {
+        this._cardsUI.filter(function (cardUI) {
+            return cardUI.id === id;
+        })[0].el.classList.add(this._guessedClass);
+    },
+
+    unmarkGuessed: function unmarkGuessed(id) {
+        this._cardsUI.filter(function (cardUI) {
+            return cardUI.id === id;
+        })[0].el.classList.remove(this._guessedClass);
+    },
+
+    initNewUICards: function initNewUICards(storeCards) {
+        var _this2 = this;
+
+        this._rootElement.innerHTML = '';
+        this._cardsUI = storeCards.map(function (card) {
+            return {
+                id: card.id,
+                el: _this2._createNewCardElement(card.name + '.svg', _this2._backImage)
+            };
+        });
+        this._cardsUI.forEach(function (cardUI) {
+            return _this2._addNewCardToDOM(cardUI);
+        });
+    },
+
+    init: function init() {
+        storeManager.getStore().dispatch(initCards(this._animalsEl.value));
+        this.initNewUICards(storeManager.getCurrentState().cards);
+        this._addListeners();
+    }
+};
 
 //Store
-store = (0, _redux.createStore)(reducer, initState());
-
-store.subscribe(function () {
-    var state = store.getState();
+storeManager.init().getStore().subscribe(function () {
+    var state = storeManager.getNewState();
 
     console.log(state);
 
+    if (state.cards !== storeManager.getPreviousState().cards) {
+        ui.initNewUICards(state.cards);
+    }
+
     state.cards.forEach(function (card) {
         if (state.flippedCards.includes(card.id)) {
-            card.el.classList.add('flipped');
+            ui.flipCard(card.id);
         } else {
-            card.el.classList.remove('flipped');
+            ui.unFlipCard(card.id);
         }
 
         if (state.guessedCards.includes(card.id)) {
-            card.el.classList.add('guessed');
+            ui.markGuessed(card.id);
         } else {
-            card.el.classList.remove('guessed');
+            ui.unmarkGuessed(card.id);
         }
     });
 
-    pointsEl.innerHTML = state.guessedCards.length / 2;
-    turnsEl.innerHTML = state.turns;
+    ui.updateScoreCard(state);
 });
 
-resetEl.addEventListener('click', function () {
-    store.dispatch(reset());
-});
-
-function newGame() {
-    store.dispatch(reset());
-    setTimeout(function () {
-        store.dispatch(initCards(animalsEl.value));
-    }, 500);
-}
-
-newGameEl.addEventListener('click', newGame);
-
-animalsEl.value = store.getState().animals;
-
-animalsEl.addEventListener('change', function (e) {
-    store.dispatch(reset());
-    store.dispatch(initCards(e.target.value));
-});
-
-store.dispatch(initCards(animalsEl.value));
+//Run the app
+ui.init();
 
 },{"redux":6}]},{},[16]);

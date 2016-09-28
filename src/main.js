@@ -1,60 +1,20 @@
 import {createStore, applyMiddleware} from 'redux';
 
-function addCardToDom(frontImageName, backImageName) {
-    var imagesFolder = 'images';
-    var card = document.createElement('li');
-    var frontContainer = document.createElement('div');
-    var frontImage = document.createElement('img');
-    var backImage = document.createElement('img');
-    var backContainer = document.createElement('div');
-    
-    card.className = 'card';
-    frontImage.src = imagesFolder + '/' + frontImageName;
-    frontContainer.className = 'cardFront';
-    frontContainer.appendChild(frontImage);
-    backImage.src = imagesFolder + '/' + backImageName;
-    backContainer.className = 'cardBack';
-    backContainer.appendChild(backImage);
-    card.appendChild(frontContainer);
-    card.appendChild(backContainer);
-    rootElement.appendChild(card);
-    
-    return card;
-}
-
 function shuffle(array) {
     for(var j, x, i = array.length; i; j = parseInt(Math.random() * i), x = array[--i], array[i] = array[j], array[j] = x);
     return array;
 }
 
-function initCardTiles(animalsNumber) {
-    var backImage = 'back.svg';
+function createNewCards(animalsNumber) {
     var animals = ['cat', 'donkey', 'teal', 'duck', 'monkey', 'dog', 'cow', 'chick', 'elephant', 'beaver', 'penguin', 'zebra', 'pig', 'lion', 'hen', 'bear' ];
     animals = animals.slice(0, animalsNumber);
     
-    rootElement.innerHTML = '';
-    
     return shuffle(animals.concat(animals)).map((animal, i) => {
-        var card = addCardToDom(animal + '.svg', backImage);
-        card.addEventListener('click', handleCardClic(i));
-        
         return {
             id: i,
-            name: animal,
-            el: card
+            name: animal
         };
     });
-}
-
-function initState() {
-    return {
-        animals: 10,
-        points: 0,
-        flippedCards: [],
-        guessedCards: [],
-        turns: 0,
-        cards: []
-    };
 }
 
 //Actions
@@ -120,7 +80,7 @@ function reducer(state, action) {
         case 'INIT_CARDS':
             return Object.assign({}, state, {
                 animals: action.animals,
-                cards: initCardTiles(action.animals) 
+                cards: createNewCards(action.animals) 
             });
         default:
             return state;
@@ -129,76 +89,193 @@ function reducer(state, action) {
 
 
 //Front end
-var store;
-const pointsEl = document.getElementById('points');
-const turnsEl = document.getElementById('turns');
-const resetEl = document.getElementById('reset');
-const newGameEl = document.getElementById('newGame');
-const animalsEl = document.getElementById('animals');
-const rootElement = document.getElementById('cards');
+const storeManager = {
+    _states: [],
+    _maxStatesLength: 2,
+    _store: {},
+    
+    _initState: function() {
+        return {
+            animals: 10,
+            points: 0,
+            flippedCards: [],
+            guessedCards: [],
+            turns: 0,
+            cards: []
+        };
+    },
+    
+    _storeState: function(state) {
+        this._states.push(state);
+        if (this._states.length > this._maxStatesLength) {
+            this._states.shift();
+        }
+        return state;    
+    },
+    
+    getNewState: function() {
+        return this._storeState(this._store.getState());
+    },
+    
+    getPreviousState: function() {
+        return (this._states.length < 2) ? null : this._states[this._states.length - 2];
+    },
+    
+    getCurrentState: function() {
+        return this._states[this._states.length - 1];
+    },
+    
+    getStore: function() {
+        return this._store;  
+    },
+    
+    init: function() {
+        var initialState = this._initState();
+        this._store = createStore(reducer, initialState);
+        this._states.push(initialState);    
+        return this;
+    }
+};
 
-function handleCardClic(id) {
-    return function() {
-        const state = store.getState();
-        if (state.flippedCards.includes(id)) {
-            return;
+const ui = {
+    _pointsEl: document.getElementById('points'),
+    _turnsEl: document.getElementById('turns'),
+    _resetEl: document.getElementById('reset'),
+    _newGameEl: document.getElementById('newGame'),
+    _animalsEl: document.getElementById('animals'),
+    _rootElement: document.getElementById('cards'),
+    _cardsUI:[],
+    _backImage: 'back.svg',
+    _flippedClass: 'flipped',
+    _guessedClass: 'guessed',
+    
+    _handleCardClick: function(id) {
+        return function() {
+            const state = storeManager.getCurrentState();
+            if (state.flippedCards.includes(id)) {
+                return;
+            }
+            
+            if (state.flippedCards.length === 2) {
+                storeManager.getStore().dispatch(unflipCards());
+                storeManager.getStore().dispatch(newTurn());
+            }
+            
+            storeManager.getStore().dispatch(flipCard(id));
+            storeManager.getStore().dispatch(checkMatch());
+        };
+    },
+    
+    _createNewCardElement: function(frontImageName, backImageName) {
+        var imagesFolder = 'images';
+        var card = document.createElement('li');
+        var frontContainer = document.createElement('div');
+        var frontImage = document.createElement('img');
+        var backImage = document.createElement('img');
+        var backContainer = document.createElement('div');
+        
+        card.className = 'card';
+        frontImage.src = imagesFolder + '/' + frontImageName;
+        frontContainer.className = 'cardFront';
+        frontContainer.appendChild(frontImage);
+        backImage.src = imagesFolder + '/' + backImageName;
+        backContainer.className = 'cardBack';
+        backContainer.appendChild(backImage);
+        card.appendChild(frontContainer);
+        card.appendChild(backContainer);
+        
+        return card;
+    },
+    
+    _addNewCardToDOM: function(cardUI) {
+        cardUI.el.addEventListener('click', this._handleCardClick(cardUI.id).bind(this));
+        this._rootElement.appendChild(cardUI.el);
+    },
+
+    _addListeners: function() {
+        function newGame() {
+            storeManager.getStore().dispatch(reset());
+            setTimeout(() => storeManager.getStore().dispatch(initCards(this._animalsEl.value)), 500);
         }
         
-        if (state.flippedCards.length === 2) {
-            store.dispatch(unflipCards());
-            store.dispatch(newTurn());
-        }
-        
-        store.dispatch(flipCard(id));
-        store.dispatch(checkMatch());
-    };
-}
+        this._resetEl.addEventListener('click', function() {
+            storeManager.getStore().dispatch(reset()); 
+        });
 
+        this._newGameEl.addEventListener('click', newGame.bind(this));
+
+        this._animalsEl.value = storeManager.getCurrentState().animals;
+
+        this._animalsEl.addEventListener('change', function(e) {
+            storeManager.getStore().dispatch(reset()); 
+            storeManager.getStore().dispatch(initCards(e.target.value));
+        });    
+    },
+    
+    updateScoreCard: function(state) {
+        this._pointsEl.innerHTML = state.guessedCards.length / 2;
+        this._turnsEl.innerHTML = state.turns;  
+    },
+    
+    flipCard: function(id) {
+        this._cardsUI.filter(cardUI => cardUI.id === id)[0].el.classList.add(this._flippedClass);  
+    },
+    
+    unFlipCard: function(id) {
+        this._cardsUI.filter(cardUI => cardUI.id === id)[0].el.classList.remove(this._flippedClass);  
+    },
+    
+    markGuessed: function(id) {
+        this._cardsUI.filter(cardUI => cardUI.id === id)[0].el.classList.add(this._guessedClass);  
+    },
+    
+    unmarkGuessed: function(id) {
+        this._cardsUI.filter(cardUI => cardUI.id === id)[0].el.classList.remove(this._guessedClass);  
+    },
+    
+    initNewUICards: function(storeCards) {
+        this._rootElement.innerHTML = '';
+        this._cardsUI = storeCards.map(card => ({
+            id: card.id,
+            el: this._createNewCardElement(card.name + '.svg', this._backImage)
+        }));
+        this._cardsUI.forEach(cardUI => this._addNewCardToDOM(cardUI));    
+    },
+    
+    init: function() {
+        storeManager.getStore().dispatch(initCards(this._animalsEl.value));
+        this.initNewUICards(storeManager.getCurrentState().cards);
+        this._addListeners();
+    }
+};
 
 //Store
-store = createStore(reducer, initState());
-    
-store.subscribe(function() {
-    const state = store.getState();
+storeManager.init().getStore().subscribe(function() {
+    const state = storeManager.getNewState();
     
     console.log(state);
     
+    if (state.cards !== storeManager.getPreviousState().cards) {
+        ui.initNewUICards(state.cards);
+    }
+    
     state.cards.forEach(card => {
-       if (state.flippedCards.includes(card.id)) {
-            card.el.classList.add('flipped');
-       } else  {
-            card.el.classList.remove('flipped');
-       }
+        if (state.flippedCards.includes(card.id)) {
+             ui.flipCard(card.id);
+        } else  {
+             ui.unFlipCard(card.id);
+        }
        
-       if (state.guessedCards.includes(card.id)) {
-            card.el.classList.add('guessed');
-       } else  {
-            card.el.classList.remove('guessed');
+        if (state.guessedCards.includes(card.id)) {
+            ui.markGuessed(card.id);
+        } else  {
+            ui.unmarkGuessed(card.id); 
        }
     });
-
-    pointsEl.innerHTML = state.guessedCards.length / 2;
-    turnsEl.innerHTML = state.turns;
+    
+    ui.updateScoreCard(state);
 });
 
-resetEl.addEventListener('click', function() {
-   store.dispatch(reset()); 
-});
 
-function newGame() {
-    store.dispatch(reset());
-    setTimeout(function() {
-        store.dispatch(initCards(animalsEl.value));
-    }, 500);
-}
-
-newGameEl.addEventListener('click', newGame);
-
-animalsEl.value = store.getState().animals;
-
-animalsEl.addEventListener('change', function(e) {
-    store.dispatch(reset()); 
-    store.dispatch(initCards(e.target.value));
-});
-
-store.dispatch(initCards(animalsEl.value));
+//Run the app
+ui.init();

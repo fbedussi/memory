@@ -27,6 +27,7 @@ body {
     border: solid 1px black;
     border-radius: 3px;
     margin: 10px;
+    background-color: lightgrey;
 }
 
 .card.flipped, .card.guessed {
@@ -34,6 +35,7 @@ body {
 }
 
 .card.guessed {
+    background-color: green;
     border-color: green;    
 }
 
