@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch:js": "watchify src/main.js -o public/bundle.js -t [ babelify  --presets [ es2015 ] --sourceMaps 'both' ]",
+    "watch:js": "watchify src/main.js --debug -o public/bundle.js -t [ babelify  --presets [ es2015 ] ]",
     "watch:css": "./node_modules/postcss-cli/bin/postcss -w --use autoprefixer src/*.css -d public/",
     "watch:css_win": "postcss -w --use autoprefixer src/*.css -d public/",
     "watch": "npm run watch:js & npm run watch:css"
@@ -14,11 +14,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "redux": "^3.6.0"
+  },
+  "devDependencies": {
+    "babel-preset-react": "^6.16.0",
     "autoprefixer": "^6.4.1",
     "babel-preset-es2015": "^6.14.0",
     "babelify": "^7.3.0",
     "postcss-cli": "^2.6.0",
-    "redux": "^3.6.0",
     "watchify": "^3.7.0"
   }
 }
