@@ -1,17 +1,9 @@
-export function toggleCard(id) {
-    return { type: 'TOGGLE_CARD', id: id };
-}
-
-export function flipCard(id) {
-    return { type: 'FLIP_CARD', id: id };
+export function cardClicked(id) {
+    return { type: 'CARD_CLICKED', id: id };
 }
 
 export function unflipCards() {
     return { type: 'UNFLIP_CARDS'};
-}
-
-export function checkMatch() {
-    return { type: 'CHECK_MATCH'};
 }
 
 export function newTurn() {

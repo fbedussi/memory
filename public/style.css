@@ -50,7 +50,7 @@ body {
 
 .card.guessed {
     background-color: green;
-    border-color: green;    
+    border-color: green;
 }
 
 .cardFront, .cardBack {

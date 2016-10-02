@@ -3,7 +3,7 @@ import observeStore from './observeStore';
 import memory from './reducers';
 import createNewCards from './createNewCards';
 import ui from './ui';
-
+const numberOfCards = 10;
 const store = createStore(memory, initState());
 
 function initState() {
@@ -12,8 +12,9 @@ function initState() {
         points: 0,
         flippedCards: [],
         guessedCards: [],
+        cardsToUnflip: [],
         turns: 0,
-        cards: createNewCards(10)
+        cards: createNewCards(numberOfCards)
     };
 }
 
@@ -27,6 +28,12 @@ function handleFlippedCards(flippedCards) {
     });
 }
 
+function handleUnflipCards(cardsToUnflip) {
+    cardsToUnflip.forEach(id => {
+        ui.unFlipCard(id);
+    });
+}
+
 function handleGuessedCards(guessedCards) {
     ui.updateGuessedScore(guessedCards.length/2);
     
@@ -36,18 +43,18 @@ function handleGuessedCards(guessedCards) {
 }
 
 function handleNewTurn(turns) {
-    ui.unFlipFlippedCards();
     ui.updateTurns(turns);
 }
 
 
 observeStore(store, 'cards', handleNewGame);
 observeStore(store, 'flippedCards', handleFlippedCards);
+observeStore(store, 'cardsToUnflip', handleUnflipCards);
 observeStore(store, 'turns', handleNewTurn);
 observeStore(store, 'guessedCards', handleGuessedCards);
 
 
 //Front end
-ui.init(store);
+ui.init(store, numberOfCards);
 
 

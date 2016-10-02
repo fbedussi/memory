@@ -1,4 +1,4 @@
-import {newTurn, flipCard, checkMatch, reset, initCards, changeAnimals} from './actions';
+import {cardClicked, reset, initCards, changeAnimals} from './actions';
 
 const ui = {
     _pointsEl: document.getElementById('points'),
@@ -14,17 +14,7 @@ const ui = {
     
     _handleCardClick: function(id) {
         return function() {
-            const state = this._store.getState();
-            if (state.flippedCards.includes(id)) {
-                return;
-            }
-            
-            if (state.flippedCards.length === 2) {
-                this._store.dispatch(newTurn());
-            }
-            
-            this._store.dispatch(flipCard(id));
-            this._store.dispatch(checkMatch());
+            this._store.dispatch(cardClicked(id));
         };
     },
     
@@ -54,9 +44,7 @@ const ui = {
         this._rootElement.appendChild(cardUI.el);
     },
 
-    _addListeners: function() {
-        const state = this._store.getState();
-        
+    _addListeners: function(numberOfCards) {
         function newGame() {
             this._store.dispatch(reset());
             setTimeout(() => this._store.dispatch(initCards()), 500);
@@ -68,7 +56,7 @@ const ui = {
 
         this._newGameEl.addEventListener('click', newGame.bind(this));
 
-        this._animalsEl.value = state.animals;
+        this._animalsEl.value = numberOfCards;
 
         this._animalsEl.addEventListener('input', (e) => {
             this._store.dispatch(changeAnimals(e.target.value)); 
@@ -89,11 +77,10 @@ const ui = {
         cardToFlip.flipped = true;
     },
     
-    unFlipFlippedCards: function() {
-        this._cardsUI.filter(cardUI => cardUI.flipped).forEach(cardUI => {
-            cardUI.el.classList.remove(this._flippedClass);
-            cardUI.flipped = false; 
-        });
+    unFlipCard: function(id) {
+        var cardToUnFlip = this._cardsUI.filter(cardUI => cardUI.id === id)[0];
+        cardToUnFlip.el.classList.remove(this._flippedClass);
+        cardToUnFlip.flipped = false;
     },
     
     markGuessed: function(id) {
@@ -114,9 +101,9 @@ const ui = {
         this._cardsUI.forEach(cardUI => this._addNewCardToDOM(cardUI));    
     },
     
-    init: function(store) {
+    init: function(store, numberOfCards) {
         this._store = store;
-        this._addListeners();
+        this._addListeners(numberOfCards);
     }
 };
 
