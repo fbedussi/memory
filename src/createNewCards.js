@@ -11,6 +11,8 @@ function createNewCards(animalsNumber) {
         return {
             id: i,
             changed: false,
+            flipped: false,
+            guessed: false,
             name: animal
         };
     });

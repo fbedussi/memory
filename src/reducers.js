@@ -3,65 +3,63 @@ import createNewCards from './createNewCards';
 var animals = 2;
 
 function reducer(state = {
-        animals: animals,
-        points: 0,
-        flippedCards: [],
-        guessedCards: [],
-        cardsToUnflip: [],
-        turns: 0,
-        cards: createNewCards(animals)
-    }, action) {
-    switch (action.type) {
+	animals: animals,
+	points: 0,
+	turns: 0,
+	gameId: +new Date(),
+	cards: createNewCards(animals)
+}, action) {
+	switch (action.type) {
+		case 'CARD_CLICKED':
+			var cardClicked = state.cards.filter(card => card.id === action.id)[0];
 
-        case 'CARD_CLICKED':
-            if (state.flippedCards.includes(action.id)) {
-                return state;
-            }
-            
-            if (state.flippedCards.length === 2) {
-                return Object.assign({}, state, {
-                    flippedCards: [action.id],
-                    cardsToUnflip: state.flippedCards,
-                    turns: state.turns + 1
-                });
-            }
-            
-            var flippedCards = state.flippedCards.concat(action.id);
-            var cardsMatch;
-            
-            if (flippedCards.length === 2) {
-                cardsMatch = flippedCards.reduce(
-                        function(a,b) {
-                            return state.cards.filter(card => card.id === a)[0].name === state.cards.filter(card => card.id === b)[0].name;
-                        });                
-            }
-            
-            const guessedCards =  cardsMatch ? state.guessedCards.concat(flippedCards) : state.guessedCards;
-                
-            return Object.assign({}, state, {
-                flippedCards,
-                guessedCards
-            });
-        case 'RESET':
-            return Object.assign({}, state, {
-                turns: 0,
-                points: 0,
-                flippedCards: [],
-                cardsToUnflip: state.flippedCards,
-                guessedCards: []
-            });
-        case 'INIT_CARDS':
-            return Object.assign({}, state, {
-                cards: createNewCards(state.animals) 
-            });
-        case 'CHANGE_ANIMALS':
-            return Object.assign({}, state, {
-                animals: action.animals,
-                cards: createNewCards(action.animals)
-            });
-        default:
-            return state;
-    }
+			if (cardClicked.flipped || cardClicked.guessed) {
+				return state;
+			}
+
+			if (state.cards.filter(card => card.flipped).length === 2) {
+				return Object.assign({}, state, {
+					cards: state.cards.map(card =>
+						card.id === action.id ?
+						Object.assign({}, card, {
+							flipped: true
+						}) : Object.assign({}, card, {
+							flipped: false
+						})),
+					turns: state.turns + 1
+				});
+			}
+
+			var newCards = state.cards.map(card => card.id !== action.id ? card : Object.assign({}, card, {
+				flipped: true
+			}));
+			var flippedCardsId = newCards.filter(card => card.flipped).map(card => card.id);
+
+			if (flippedCardsId.length === 2 && newCards[flippedCardsId[0]].name === newCards[flippedCardsId[1]].name) {
+				newCards[flippedCardsId[0]].guessed = newCards[flippedCardsId[1]].guessed = true;
+			}
+
+			return Object.assign({}, state, {
+				cards: newCards
+			});
+		case 'RESET':
+			return Object.assign({}, state, {
+				turns: 0,
+				points: 0,
+				cards: state.cards.map(card => Object.assign({}, card, {
+					flipped: false,
+					guessed: false
+				}))
+			});
+		case 'NEW_GAME':
+			return Object.assign({}, state, {
+				animals: action.animals,
+				gameId: +new Date(),
+				cards: createNewCards(action.animals)
+			});
+		default:
+			return state;
+	}
 }
 
-export default reducer; 
+export default reducer;

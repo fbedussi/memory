@@ -1,4 +1,4 @@
-import {cardClicked, reset, initCards, changeAnimals} from './actions';
+import {cardClicked, reset, initCards, newGame} from './actions';
 
 const ui = {
     _pointsEl: document.getElementById('points'),
@@ -44,22 +44,19 @@ const ui = {
         this._rootElement.appendChild(cardUI.el);
     },
 
-    _addListeners: function(numberOfCards) {
-        function newGame() {
-            this._store.dispatch(reset());
-            setTimeout(() => this._store.dispatch(initCards()), 500);
-        }
-        
+    _addListeners: function() {
         this._resetEl.addEventListener('click', () => {
             this._store.dispatch(reset()); 
         });
 
-        this._newGameEl.addEventListener('click', newGame.bind(this));
+        this._newGameEl.addEventListener('click', () => {
+            this._store.dispatch(newGame(this._animalsEl.value)); 
+        });
 
-        this._animalsEl.value = numberOfCards;
+        this._animalsEl.value = this._store.getState().animals;
 
         this._animalsEl.addEventListener('input', (e) => {
-            this._store.dispatch(changeAnimals(e.target.value)); 
+            this._store.dispatch(newGame(e.target.value)); 
         });    
     },
     
@@ -71,43 +68,32 @@ const ui = {
         this._turnsEl.innerHTML = turns;  
     },
     
-    flipCard: function(id) {
-        var cardToFlip = this._cardsUI.filter(cardUI => cardUI.id === id)[0];
-        cardToFlip.el.classList.add(this._flippedClass);
-        cardToFlip.flipped = true;
+    handleCards: function(storeCards) {
+        this._cardsUI.forEach(cardUI => {
+            let storeCard = storeCards.filter(storeCard => storeCard.id === cardUI.id)[0];
+            
+            if (cardUI.flipped !== storeCard.flipped) {
+                cardUI.flipped = storeCard.flipped;
+                cardUI.flipped? cardUI.el.classList.add(this._flippedClass) : cardUI.el.classList.remove(this._flippedClass);
+            }
+            
+            if (cardUI.guessed !== storeCard.guessed) {
+                cardUI.guessed = storeCard.guessed;
+                cardUI.guessed? cardUI.el.classList.add(this._guessedClass) : cardUI.el.classList.remove(this._guessedClass);
+            }
+        });
     },
     
-    unFlipCard: function(id) {
-        var cardToUnFlip = this._cardsUI.filter(cardUI => cardUI.id === id)[0];
-        cardToUnFlip.el.classList.remove(this._flippedClass);
-        cardToUnFlip.flipped = false;
-    },
-    
-    markGuessed: function(id) {
-        var card = this._cardsUI.filter(cardUI => cardUI.id === id)[0];
-        card.el.classList.add(this._guessedClass);
-        setTimeout(()=> {
-            card.el.classList.add('hide');            
-        },500);
-    },
-    
-    unmarkGuessed: function(id) {
-        this._cardsUI.filter(cardUI => cardUI.id === id)[0].el.classList.remove(this._guessedClass);  
-    },
-    
-    initNewUICards: function(storeCards) {
+    initNewUICards: function() {
+        var storeCards = this._store.getState().cards;
         this._rootElement.innerHTML = '';
-        this._cardsUI = storeCards.map(card => ({
-            id: card.id,
-            flipped: false,
-            el: this._createNewCardElement(card.name + '.svg', this._backImage)
-        }));
+        this._cardsUI = storeCards.map(card => Object.assign({}, card, {el: this._createNewCardElement(card.name + '.svg', this._backImage)}));
         this._cardsUI.forEach(cardUI => this._addNewCardToDOM(cardUI));    
     },
     
     init: function(store) {
         this._store = store;
-        this._addListeners(store.getState().animals);
+        this._addListeners();
     }
 };
 

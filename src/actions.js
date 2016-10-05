@@ -10,6 +10,6 @@ export function initCards() {
     return { type: 'INIT_CARDS'};    
 }
 
-export function changeAnimals(animals) {
-    return { type: 'CHANGE_ANIMALS', animals: animals};    
+export function newGame(animals) {
+    return { type: 'NEW_GAME', animals: animals};    
 }
