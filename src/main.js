@@ -1,10 +1,9 @@
 import {createStore} from 'redux';
 import observeStore from './observeStore';
-import memory from './reducers';
-import createNewCards from './createNewCards';
+import reducer from './reducers';
 import ui from './ui';
 
-const store = createStore(memory);
+const store = createStore(reducer);
 
 function handleNewGame(newCards) {
     ui.initNewUICards(newCards);

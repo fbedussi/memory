@@ -1,13 +1,15 @@
 import createNewCards from './createNewCards';
 
-function memory(state = {
-        animals: 2,
+var animals = 2;
+
+function reducer(state = {
+        animals: animals,
         points: 0,
         flippedCards: [],
         guessedCards: [],
         cardsToUnflip: [],
         turns: 0,
-        cards: createNewCards(2)
+        cards: createNewCards(animals)
     }, action) {
     switch (action.type) {
 
@@ -25,9 +27,10 @@ function memory(state = {
             }
             
             var flippedCards = state.flippedCards.concat(action.id);
+            var cardsMatch;
             
             if (flippedCards.length === 2) {
-                var cardsMatch = flippedCards.reduce(
+                cardsMatch = flippedCards.reduce(
                         function(a,b) {
                             return state.cards.filter(card => card.id === a)[0].name === state.cards.filter(card => card.id === b)[0].name;
                         });                
@@ -61,4 +64,4 @@ function memory(state = {
     }
 }
 
-export default memory; 
+export default reducer; 
