@@ -84,7 +84,11 @@ const ui = {
     },
     
     markGuessed: function(id) {
-        this._cardsUI.filter(cardUI => cardUI.id === id)[0].el.classList.add(this._guessedClass);  
+        var card = this._cardsUI.filter(cardUI => cardUI.id === id)[0];
+        card.el.classList.add(this._guessedClass);
+        setTimeout(()=> {
+            card.el.classList.add('hide');            
+        },500);
     },
     
     unmarkGuessed: function(id) {

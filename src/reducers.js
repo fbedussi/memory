@@ -1,13 +1,13 @@
 import createNewCards from './createNewCards';
 
 function memory(state = {
-        animals: 10,
+        animals: 2,
         points: 0,
         flippedCards: [],
         guessedCards: [],
         cardsToUnflip: [],
         turns: 0,
-        cards: createNewCards(10)
+        cards: createNewCards(2)
     }, action) {
     switch (action.type) {
 
