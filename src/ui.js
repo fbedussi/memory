@@ -105,7 +105,7 @@ const ui = {
         this._cardsUI.forEach(cardUI => this._addNewCardToDOM(cardUI));    
     },
     
-    init: function(store, numberOfCards) {
+    init: function(store) {
         this._store = store;
         this._addListeners(store.getState().animals);
     }
