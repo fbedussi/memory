@@ -1,12 +1,16 @@
 import createNewCards from './createNewCards';
 
-function memory(state, action) {
+function memory(state = {
+        animals: 10,
+        points: 0,
+        flippedCards: [],
+        guessedCards: [],
+        cardsToUnflip: [],
+        turns: 0,
+        cards: createNewCards(10)
+    }, action) {
     switch (action.type) {
-        case 'FLIP_CARD':
-            return Object.assign({}, state, {
-                flippedCards: state.flippedCards.includes(action.id) ? state.flippedCards: state.flippedCards.concat(action.id)
-            });
-        
+
         case 'CARD_CLICKED':
             if (state.flippedCards.includes(action.id)) {
                 return state;

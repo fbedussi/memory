@@ -3,20 +3,8 @@ import observeStore from './observeStore';
 import memory from './reducers';
 import createNewCards from './createNewCards';
 import ui from './ui';
-const numberOfCards = 10;
-const store = createStore(memory, initState());
 
-function initState() {
-    return {
-        animals: 10,
-        points: 0,
-        flippedCards: [],
-        guessedCards: [],
-        cardsToUnflip: [],
-        turns: 0,
-        cards: createNewCards(numberOfCards)
-    };
-}
+const store = createStore(memory);
 
 function handleNewGame(newCards) {
     ui.initNewUICards(newCards);
@@ -55,6 +43,6 @@ observeStore(store, 'guessedCards', handleGuessedCards);
 
 
 //Front end
-ui.init(store, numberOfCards);
+ui.init(store);
 
 

@@ -103,7 +103,7 @@ const ui = {
     
     init: function(store, numberOfCards) {
         this._store = store;
-        this._addListeners(numberOfCards);
+        this._addListeners(store.getState().animals);
     }
 };
 
