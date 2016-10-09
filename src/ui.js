@@ -1,4 +1,4 @@
-import {cardClicked, reset, initCards, newGame} from './actions';
+import {cardClicked, reset, newGame} from './actions';
 
 const ui = {
     _pointsEl: document.getElementById('points'),
@@ -74,12 +74,20 @@ const ui = {
             
             if (cardUI.flipped !== storeCard.flipped) {
                 cardUI.flipped = storeCard.flipped;
-                cardUI.flipped? cardUI.el.classList.add(this._flippedClass) : cardUI.el.classList.remove(this._flippedClass);
+                if (cardUI.flipped) {
+                    cardUI.el.classList.add(this._flippedClass);
+                } else {
+                    cardUI.el.classList.remove(this._flippedClass);
+                }
             }
             
             if (cardUI.guessed !== storeCard.guessed) {
                 cardUI.guessed = storeCard.guessed;
-                cardUI.guessed? cardUI.el.classList.add(this._guessedClass) : cardUI.el.classList.remove(this._guessedClass);
+                if (cardUI.guessed) {
+                    cardUI.el.classList.add(this._guessedClass);
+                } else {
+                    cardUI.el.classList.remove(this._guessedClass);
+                }
             }
         });
     },
