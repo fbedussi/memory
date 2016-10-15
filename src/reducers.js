@@ -43,7 +43,7 @@ function reducer(state = {
 
 			return Object.assign({}, state, {
 				cards: newCards,
-				points
+				points: points
 			});
 		case 'RESET':
 			return Object.assign({}, state, {
@@ -58,6 +58,8 @@ function reducer(state = {
 			return Object.assign({}, state, {
 				animals: action.animals,
 				gameId: +new Date(),
+				points: 0,
+				turns: 0,
 				cards: createNewCards(action.animals)
 			});
 		default:
