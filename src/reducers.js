@@ -34,13 +34,16 @@ function reducer(state = {
 				flipped: true
 			}));
 			var flippedCardsId = newCards.filter(card => card.flipped).map(card => card.id);
+			var points = state.points;
 
 			if (flippedCardsId.length === 2 && newCards[flippedCardsId[0]].name === newCards[flippedCardsId[1]].name) {
 				newCards[flippedCardsId[0]].guessed = newCards[flippedCardsId[1]].guessed = true;
+				points++;
 			}
 
 			return Object.assign({}, state, {
-				cards: newCards
+				cards: newCards,
+				points
 			});
 		case 'RESET':
 			return Object.assign({}, state, {
