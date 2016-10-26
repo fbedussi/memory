@@ -15,6 +15,7 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
     perspective: 1000px;
     width: calc(100% - 15em);
 }
@@ -101,6 +102,7 @@
     color: black;
     border-radius: 3px;
     border: none;
+    margin-right: 1em;
 }
 
 .scoreCard a {
@@ -109,10 +111,18 @@
 
 @media screen and (max-width: 80em) {
     body {
+        font-size: 24px;
+    }
+    
+    #root > div {
         flex-direction: column;
     }
     
     .cardsDeck, .scoreCard {
         width: 100%;
+    }
+    
+    .cardsDeck {
+        flex: 1;
     }
 }
